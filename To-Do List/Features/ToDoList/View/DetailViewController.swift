@@ -10,36 +10,26 @@ import CoreData
 
 final class DetailViewController: UIViewController {
     
-    private var descriptionTextField: UITextField = UITextField()
-    private var dateTextField: UITextField = UITextField()
-    private var timeTextField: UITextField = UITextField()
-    private var saveButton: UIButton = UIButton()
+    private let descriptionLabel: UILabel = UILabel()
+    private let dateLabel: UILabel = UILabel()
+    private let timeLabel: UILabel = UILabel()
+    
+    var descriptionTextField: UITextField = UITextField()
+    var dateTextField: UITextField = UITextField()
+    var timeTextField: UITextField = UITextField()
+    var saveButton: UIButton = UIButton()
     
     var viewModel = DetailViewModel()
     
-    var chooseDescription = ""
-    var chooseUUID = UUID()
+    var chooseDetailDescription = ""
+    var chooseDetailUUID: UUID?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         viewModel.view = self
-        drawDesing()
-        configure()
-        
-        if chooseDescription != "" {
-            // Core Datadan bilgi alınacak.
-            
-            
-        } else {
-            saveButton.isHidden = false
-            // saveButton.isEnabled = false
-            descriptionTextField.text = ""
-            dateTextField.text = ""
-            timeTextField.text = ""
-        }
-        
-        gestureRecgnizeFeature()
+        viewModel.viewDidLoad()
+        viewModel.fetchData()
     }
     
     func drawDesing() {
@@ -57,6 +47,10 @@ final class DetailViewController: UIViewController {
                                                                   height: 1)
             self.descriptionTextField.layer.shadowRadius = 2
             
+            self.descriptionLabel.text = "Description:"
+            self.descriptionLabel.font = .boldSystemFont(ofSize: 18)
+            self.descriptionLabel.sizeToFit()
+            
             self.dateTextField.placeholder = "DD.MM.YYYY"
             self.dateTextField.borderStyle = .roundedRect
             self.dateTextField.layer.shadowColor = UIColor.systemGray.cgColor
@@ -64,12 +58,20 @@ final class DetailViewController: UIViewController {
             self.dateTextField.layer.shadowOffset = CGSize(width: 1, height: 1)
             self.dateTextField.layer.shadowRadius = 2
             
+            self.dateLabel.text = "Date:"
+            self.dateLabel.font = .boldSystemFont(ofSize: 18)
+            self.dateLabel.sizeToFit()
+            
             self.timeTextField.placeholder = "HH.MM"
             self.timeTextField.borderStyle = .roundedRect
             self.timeTextField.layer.shadowColor = UIColor.systemGray.cgColor
             self.timeTextField.layer.shadowOpacity = 0.5
             self.timeTextField.layer.shadowOffset = CGSize(width: 1, height: 1)
             self.timeTextField.layer.shadowRadius = 2
+            
+            self.timeLabel.text = "Time:"
+            self.timeLabel.font = .boldSystemFont(ofSize: 18)
+            self.timeLabel.sizeToFit()
             
             self.saveButton.backgroundColor = .systemBlue
             self.saveButton.layer.cornerRadius = 10
@@ -85,13 +87,25 @@ final class DetailViewController: UIViewController {
     
     func configure() {
         view.addSubview(descriptionTextField)
+        view.addSubview(descriptionLabel)
+        
         view.addSubview(dateTextField)
+        view.addSubview(dateLabel)
+        
         view.addSubview(timeTextField)
+        view.addSubview(timeLabel)
+        
         view.addSubview(saveButton)
         
         makeDescriptionTextField()
+        makeDescriptionLabel()
+        
         makeDateTextField()
+        makeDateLabel()
+        
         makeTimeTextField()
+        makeTimeLabel()
+        
         makeSaveButton()
     }
 
@@ -112,26 +126,7 @@ extension DetailViewController {
 // MARK: - Button
 extension DetailViewController {
     @objc func saveButtonClicked() {
-        
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        let context = appDelegate.persistentContainer.viewContext
-        
-        let toDoList = NSEntityDescription.insertNewObject(forEntityName: "ToDo", into: context)
-        
-        toDoList.setValue(descriptionTextField.text, forKey: "explanation")
-        toDoList.setValue(dateTextField.text, forKey: "date")
-        toDoList.setValue(timeTextField.text, forKey: "time")
-        toDoList.setValue(UUID(), forKey: "id")
-        
-        do {
-            try context.save()
-            print("You saved.")
-        } catch {
-            print("You have an Error !")
-        }
-        
-        NotificationCenter.default.post(name: NSNotification.Name("dataEntered"), object: nil)
-        viewModel.segueToBackView()
+        viewModel.saveButton()
     }
 }
 
@@ -141,35 +136,57 @@ extension DetailViewController {
     func makeDescriptionTextField() {
         descriptionTextField.snp.makeConstraints { make in
             make.centerX.equalTo(view.safeAreaLayoutGuide.snp.centerX)
-            make.centerY.equalTo(view.safeAreaLayoutGuide.snp.centerY).offset(-90)
+            make.centerY.equalTo(view.safeAreaLayoutGuide.snp.centerY).offset(-100)
             // make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(100)
             make.width.equalTo(280)
             make.height.equalTo(40)
         }
     }
     
+    func makeDescriptionLabel() {
+        descriptionLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(descriptionTextField.snp.top)
+            make.leading.equalTo(descriptionTextField.snp.leading)
+        }
+    }
+    
     func makeDateTextField() {
         dateTextField.snp.makeConstraints { make in
-            make.top.equalTo(descriptionTextField.snp.bottom).offset(20)
+            make.top.equalTo(descriptionTextField.snp.bottom).offset(30)
             make.leading.equalTo(descriptionTextField.snp.leading)
             make.trailing.equalTo(descriptionTextField.snp.trailing)
             make.height.equalTo(descriptionTextField.snp.height)
         }
     }
     
+    func makeDateLabel() {
+        dateLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(dateTextField.snp.top)
+            make.leading.equalTo(dateTextField.snp.leading)
+            
+        }
+    }
+    
     func makeTimeTextField() {
         timeTextField.snp.makeConstraints { make in
-            make.top.equalTo(dateTextField.snp.bottom).offset(20)
+            make.top.equalTo(dateTextField.snp.bottom).offset(30)
             make.leading.equalTo(descriptionTextField.snp.leading)
             make.trailing.equalTo(descriptionTextField.snp.trailing)
             make.height.equalTo(descriptionTextField.snp.height)
+        }
+    }
+    
+    func makeTimeLabel() {
+        timeLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(timeTextField.snp.top)
+            make.leading.equalTo(timeTextField.snp.leading)
         }
     }
     
     func makeSaveButton() {
         saveButton.snp.makeConstraints { make in
             make.centerX.equalTo(view.safeAreaLayoutGuide.snp.centerX)
-            make.top.equalTo(timeTextField.snp.bottom).offset(20)
+            make.top.equalTo(timeTextField.snp.bottom).offset(30)
             make.width.equalTo(75)
             make.height.equalTo(descriptionTextField.snp.height)
         }

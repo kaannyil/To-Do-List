@@ -14,12 +14,12 @@ final class StartViewController: UIViewController {
     private var viewModel = StartViewModel()
     
     // MARK: - Components
-    private let tableView: UITableView = {
-        let tableView = UITableView()
-        tableView.backgroundColor = .systemBackground
-        tableView.layer.cornerRadius = 20
+    private let startTableView: UITableView = {
+        let startTableView = UITableView()
+        startTableView.backgroundColor = .systemBackground
+        startTableView.layer.cornerRadius = 20
         
-        return tableView
+        return startTableView
     }()
     
     // MARK: - Life Cycle
@@ -39,7 +39,7 @@ final class StartViewController: UIViewController {
     
     @objc func takeData() {
         viewModel.takeData()
-        tableView.reloadData()
+        startTableView.reloadData()
     }
     
     func drawDesing() {
@@ -68,14 +68,14 @@ final class StartViewController: UIViewController {
     
     func configure() {
         view.addSubview(newNoteButton)
-        view.addSubview(tableView)
+        view.addSubview(startTableView)
         
         // Buttonu ön planda tutmak için yazılan kod
         view.bringSubviewToFront(newNoteButton)
     
         setTableViewDelegates()
-        tableView.rowHeight = 75
-        tableView.register(StartTableViewCell.self, forCellReuseIdentifier: StartTableViewCell.identifier)
+        startTableView.rowHeight = 75
+        startTableView.register(StartTableViewCell.self, forCellReuseIdentifier: StartTableViewCell.identifier)
         
         // Set Constraints
         // makeTableView()
@@ -88,8 +88,8 @@ final class StartViewController: UIViewController {
 // MARK: - Delegates
 extension StartViewController {
     private func setTableViewDelegates() {
-        tableView.delegate = self
-        tableView.dataSource = self
+        startTableView.delegate = self
+        startTableView.dataSource = self
     }
 }
 
@@ -105,7 +105,7 @@ extension StartViewController {
 extension StartViewController {
     
     private func makeTableView() {
-        tableView.snp.makeConstraints { make in
+        startTableView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(10)
             make.bottom.equalTo(view.snp.bottom).offset(-10)
             make.left.equalTo(view.safeAreaLayoutGuide.snp.left).offset(10)
@@ -130,9 +130,7 @@ extension StartViewController {
 
 // MARK: - TableView Delegates
 extension StartViewController: UITableViewDelegate, UITableViewDataSource {
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        viewModel.prepare(for: segue, sender: Any?.self)
-    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfRowsInSection()
     }
@@ -150,5 +148,10 @@ extension StartViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         viewModel.didSelectRowAt(indexPath)
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        viewModel.deleteData(indexPath)
+        startTableView.reloadData()
     }
 }
