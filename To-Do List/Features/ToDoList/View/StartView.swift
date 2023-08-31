@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class StartViewController: UIViewController {
+final class StartView: UIViewController {
     
     private var newNoteButton: UIButton = UIButton()
     
@@ -57,11 +57,11 @@ final class StartViewController: UIViewController {
                                self.newNoteButton.frame.height) * 0.5
             self.newNoteButton.titleLabel?.font = UIFont.systemFont(ofSize: fontSize)
             self.newNoteButton.layer.cornerRadius = 20
-            self.newNoteButton.layer.shadowColor = UIColor.black.cgColor
+            self.newNoteButton.layer.shadowColor = UIColor.systemGray.cgColor
             self.newNoteButton.layer.shadowOpacity = 0.5
             self.newNoteButton.layer.shadowOffset = CGSize(width: 4, height: 4)
             self.newNoteButton.layer.shadowRadius = 4
-            self.newNoteButton.addTarget(self, action: #selector(self.buttonClicked),
+            self.newNoteButton.addTarget(self, action: #selector(self.newButtonClicked),
                                          for: .touchUpInside)
         }
     }
@@ -75,7 +75,7 @@ final class StartViewController: UIViewController {
     
         setTableViewDelegates()
         startTableView.rowHeight = 75
-        startTableView.register(StartTableViewCell.self, forCellReuseIdentifier: StartTableViewCell.identifier)
+        startTableView.register(StartCell.self, forCellReuseIdentifier: StartCell.identifier)
         
         // Set Constraints
         // makeTableView()
@@ -86,7 +86,7 @@ final class StartViewController: UIViewController {
 }
 
 // MARK: - Delegates
-extension StartViewController {
+extension StartView {
     private func setTableViewDelegates() {
         startTableView.delegate = self
         startTableView.dataSource = self
@@ -94,15 +94,15 @@ extension StartViewController {
 }
 
 // MARK: - Button Controller
-extension StartViewController {
+extension StartView {
     
-    @objc func buttonClicked() {
+    @objc func newButtonClicked() {
         viewModel.segueToDetailView()
     }
 }
 
 // MARK: - Programmatically UI Design
-extension StartViewController {
+extension StartView {
     
     private func makeTableView() {
         startTableView.snp.makeConstraints { make in
@@ -129,20 +129,21 @@ extension StartViewController {
 }
 
 // MARK: - TableView Delegates
-extension StartViewController: UITableViewDelegate, UITableViewDataSource {
+extension StartView: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return viewModel.numberOfRowsInSection()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: StartTableViewCell.identifier,
-                                                       for: indexPath) as? StartTableViewCell else {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: StartCell.identifier,
+                                                       for: indexPath) as? StartCell else {
             return UITableViewCell()
         }
         
         let data = viewModel.arr
         cell.set(start: data, indexPath)
+        
         return cell
     }
     
@@ -152,6 +153,7 @@ extension StartViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         viewModel.deleteData(indexPath)
+
         startTableView.reloadData()
     }
 }

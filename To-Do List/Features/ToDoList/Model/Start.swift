@@ -9,5 +9,8 @@ import Foundation
 
 struct Start {
     var description: [String] = []
+    var date: [String] = []
+    var time: [String] = []
+    var check: [Bool] = []
     var id: [UUID] = []
 }

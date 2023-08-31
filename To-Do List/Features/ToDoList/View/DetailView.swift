@@ -8,7 +8,7 @@
 import UIKit
 import CoreData
 
-final class DetailViewController: UIViewController {
+final class DetailView: UIViewController {
     
     private let descriptionLabel: UILabel = UILabel()
     private let dateLabel: UILabel = UILabel()
@@ -18,11 +18,14 @@ final class DetailViewController: UIViewController {
     var dateTextField: UITextField = UITextField()
     var timeTextField: UITextField = UITextField()
     var saveButton: UIButton = UIButton()
+    var editButton: UIButton = UIButton()
     
     var viewModel = DetailViewModel()
     
     var chooseDetailDescription = ""
     var chooseDetailUUID: UUID?
+    
+    var isKeyboardOpen = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +33,15 @@ final class DetailViewController: UIViewController {
         viewModel.view = self
         viewModel.viewDidLoad()
         viewModel.fetchData()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self,
+                                                  name: UIResponder.keyboardWillShowNotification,
+                                                  object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: UIResponder.keyboardWillHideNotification,
+                                                  object: nil)
     }
     
     func drawDesing() {
@@ -62,7 +74,7 @@ final class DetailViewController: UIViewController {
             self.dateLabel.font = .boldSystemFont(ofSize: 18)
             self.dateLabel.sizeToFit()
             
-            self.timeTextField.placeholder = "HH.MM"
+            self.timeTextField.placeholder = "HH:MM"
             self.timeTextField.borderStyle = .roundedRect
             self.timeTextField.layer.shadowColor = UIColor.systemGray.cgColor
             self.timeTextField.layer.shadowOpacity = 0.5
@@ -82,6 +94,16 @@ final class DetailViewController: UIViewController {
             self.saveButton.layer.shadowOffset = CGSize(width: 2, height: 2)
             self.saveButton.layer.shadowRadius = 2
             self.saveButton.addTarget(self, action: #selector(self.saveButtonClicked), for: .touchUpInside)
+            
+            self.editButton.backgroundColor = .systemBlue
+            self.editButton.layer.cornerRadius = 10
+            self.editButton.setTitle("Update", for: .normal)
+            self.editButton.setTitleColor(.systemBackground, for: .normal)
+            self.editButton.layer.shadowColor = UIColor.systemGray.cgColor
+            self.editButton.layer.shadowOpacity = 0.5
+            self.editButton.layer.shadowOffset = CGSize(width: 2, height: 2)
+            self.editButton.layer.shadowRadius = 2
+            self.editButton.addTarget(self, action: #selector(self.editButtonClicked), for: .touchUpInside)
         }
     }
     
@@ -96,6 +118,7 @@ final class DetailViewController: UIViewController {
         view.addSubview(timeLabel)
         
         view.addSubview(saveButton)
+        view.addSubview(editButton)
         
         makeDescriptionTextField()
         makeDescriptionLabel()
@@ -107,31 +130,64 @@ final class DetailViewController: UIViewController {
         makeTimeLabel()
         
         makeSaveButton()
+        makeEditButton()
     }
 
 }
 
 // MARK: - Page Features
-extension DetailViewController {
-    func gestureRecgnizeFeature() {
-        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(closeKeyboard))
+extension DetailView {
+    func gestureRecognizeFeature() {
+        let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         view.addGestureRecognizer(gestureRecognizer)
     }
     
-    @objc private func closeKeyboard() {
+    func notificationSetup() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillShow(notification:)),
+                                               name: UIResponder.keyboardWillShowNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillHide),
+                                               name: UIResponder.keyboardWillHideNotification,
+                                               object: nil)
+    }
+    
+    @objc func hideKeyboard() {
         view.endEditing(true)
+    }
+    
+    @objc func keyboardWillShow(notification: NSNotification) {
+        if isKeyboardOpen == false {
+            isKeyboardOpen = true
+            
+            if let keyboardFrame: NSValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue {
+                let keyboardHeight = keyboardFrame.cgRectValue.height
+                let bottomSpace = self.view.frame.height - (saveButton.frame.origin.y + saveButton.frame.height)
+                self.view.frame.origin.y -= keyboardHeight - bottomSpace + 30
+            }
+        }
+    }
+    
+    @objc private func keyboardWillHide() {
+        isKeyboardOpen = false
+        self.view.frame.origin.y = 0
     }
 }
 
 // MARK: - Button
-extension DetailViewController {
+extension DetailView {
     @objc func saveButtonClicked() {
         viewModel.saveButton()
+    }
+    
+    @objc func editButtonClicked() {
+        viewModel.editButton()
     }
 }
 
 // MARK: - Programmatically UI Design
-extension DetailViewController {
+extension DetailView {
     
     func makeDescriptionTextField() {
         descriptionTextField.snp.makeConstraints { make in
@@ -185,6 +241,15 @@ extension DetailViewController {
     
     func makeSaveButton() {
         saveButton.snp.makeConstraints { make in
+            make.centerX.equalTo(view.safeAreaLayoutGuide.snp.centerX)
+            make.top.equalTo(timeTextField.snp.bottom).offset(30)
+            make.width.equalTo(75)
+            make.height.equalTo(descriptionTextField.snp.height)
+        }
+    }
+    
+    func makeEditButton() {
+        editButton.snp.makeConstraints { make in
             make.centerX.equalTo(view.safeAreaLayoutGuide.snp.centerX)
             make.top.equalTo(timeTextField.snp.bottom).offset(30)
             make.width.equalTo(75)

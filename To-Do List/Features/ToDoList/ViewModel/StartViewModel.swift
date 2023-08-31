@@ -12,10 +12,12 @@ import CoreData
 final class StartViewModel {
     
     var arr: Start = Start()
-    var view: StartViewController?
+    var view: StartView?
     
     var chooseID: UUID?
     var chooseDescription = ""
+    var chooseDate = ""
+    var chooseTime = ""
  
     func viewDidLoad() {
         view?.drawDesing()
@@ -23,12 +25,37 @@ final class StartViewModel {
     }
     
     func segueToDetailView() {
-        let vc = DetailViewController()
+        let vc = DetailView()
         view?.navigationController?.pushViewController(vc, animated: true)
     }
     
+    func numberOfRowsInSection() -> Int {
+        return arr.description.count
+    }
+    
+    func didSelectRowAt(_ indexPath: IndexPath) {
+        let destinationVC = DetailView()
+        
+        chooseDescription = arr.description[indexPath.row]
+        chooseID = arr.id[indexPath.row]
+        
+        prepareForDetailViewController(detailVC: destinationVC)
+        
+        view?.navigationController?.pushViewController(destinationVC, animated: true)
+    }
+    
+    func prepareForDetailViewController(detailVC: DetailView) {
+        detailVC.chooseDetailDescription = chooseDescription
+        detailVC.chooseDetailUUID = chooseID!
+    }
+}
+
+// MARK: - Core Data Operations
+extension StartViewModel {
     func takeData() {
         arr.description.removeAll(keepingCapacity: false)
+        arr.date.removeAll(keepingCapacity: false)
+        arr.time.removeAll(keepingCapacity: false)
         arr.id.removeAll(keepingCapacity: false)
         
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
@@ -44,6 +71,14 @@ final class StartViewModel {
                 for result in results as! [NSManagedObject] {
                     if let description = result.value(forKey: "explanation") as? String {
                         arr.description.append(description)
+                    }
+                    
+                    if let date = result.value(forKey: "date") as? String {
+                        arr.date.append(date)
+                    }
+                    
+                    if let time = result.value(forKey: "time") as? String {
+                        arr.time.append(time)
                     }
                     
                     if let id = result.value(forKey: "id") as? UUID {
@@ -94,25 +129,5 @@ final class StartViewModel {
         } catch {
             
         }
-    }
-    
-    func numberOfRowsInSection() -> Int {
-        return arr.description.count
-    }
-    
-    func didSelectRowAt(_ indexPath: IndexPath) {
-        let destinationVC = DetailViewController()
-        
-        chooseDescription = arr.description[indexPath.row]
-        chooseID = arr.id[indexPath.row]
-        
-        prepareForDetailViewController(detailVC: destinationVC)
-        
-        view?.navigationController?.pushViewController(destinationVC, animated: true)
-    }
-    
-    func prepareForDetailViewController(detailVC: DetailViewController) {
-        detailVC.chooseDetailDescription = chooseDescription
-        detailVC.chooseDetailUUID = chooseID!
     }
 }
