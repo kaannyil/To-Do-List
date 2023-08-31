@@ -1,4 +1,4 @@
-# To-Do-List-
+# To-Do-List
 
 Some Technologies I Used:
 * MVVM
